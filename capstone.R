@@ -16,14 +16,20 @@ library(rvest)
 dict <- rvest::read_html(x="https://www.epa.gov/green-power-markets/glossary") %>%
   html_elements(css="dt strong")%>%
   html_text()
+dict
+
+dict1 <-  rvest::read_html(x="https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms") %>%
+  html_elements(css="strong")%>%
+  html_text()
+dict1
 
 
-topic <- data.frame(words=c(dict))
+mw <- c("net/zero","decarbonisation/pathway", "carbon/positive", "carbon/negative", "climate/crysis", "climate/justice" )
+mw
+
+topic <- data.frame(words=c(dict,mw))
 topic
 
-mw <- data.frame(more_words=c("net zero","decarbonisation pathway", "carbon positive", "carbon negative", "climate crysis", "climate justice" ))
-
-topic <- rbind(topic, mw)
 
 url <- "https://api.propublica.org/congress/v1/bills/subjects/"
 
@@ -37,12 +43,10 @@ for (i in 1:nrow(links1)){
 
 i <- 1
 for(i in 1:nrow(links1)){
-result <- RCurl::getURL(links1$`stri_paste(topic,".json")`,
+result <- RCurl::getURL(links1$`stri_paste(words,".json")`,
                           httpheader = c(links1$key))
   Sys.sleep(1)
   cat(result)
 }
 
 
-
-#prova
