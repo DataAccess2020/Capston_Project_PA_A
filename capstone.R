@@ -12,11 +12,19 @@ library(stringr)
 library(readr)
 library(rvest)
 
+#email <- "paolo.amantini@studenti.unimi.it"
+#user_agent <- R.Version()$version.string
+
 
 dict <- rvest::read_html(x="https://www.epa.gov/green-power-markets/glossary") %>%
   html_elements(css="dt strong")%>%
   html_text()
 dict
+
+str_trim(dict)
+str_replace(dict, pattern= "\\s*","%20")
+str_replace(dict,pattern="\\s","%20")
+
 
 dict1 <-  rvest::read_html(x="https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms") %>%
   html_elements(css="strong")%>%
@@ -24,16 +32,24 @@ dict1 <-  rvest::read_html(x="https://www.dictionary.com/e/climate-change-terms/
 dict1
 
 
-mw <- c("net/zero","decarbonisation/pathway", "carbon/positive", "carbon/negative", "climate/crysis", "climate/justice" )
-mw
 
-topic <- data.frame(words=c(dict,mw))
+topic <- data.frame(words=c(dict,dict1))
 topic
 
+str_trim(topic$words)
+str_replace(topic$words, pattern= "[\\s]*","%20")
 
-url <- "https://api.propublica.org/congress/v1/bills/subjects/"
+str_view_all(topic, pattern = "/s")
+  
+  
+  
+  green/power/purchasing
 
-links1 <- as.data.frame(stri_paste(url,topic$words,".json"))
+#api                #           #
+
+api_link <- "https://api.propublica.org/congress/v1/bills/subjects/climate/change.json"
+
+links1 <- as.data.frame(stri_paste(api_link,topic$words,".json"))
 links1
 
 i <- 1
@@ -49,4 +65,11 @@ result <- RCurl::getURL(links1$`stri_paste(words,".json")`,
   cat(result)
 }
 
+api_link <- "https://api.propublica.org/congress/v1/bills/subjects/climate%20change.json"
+query <- "https://api.propublica.org/congress/v1/bills/search.json?query=climate%20change"
 
+clima <- RCurl::getURL(query,
+                       httpheader = key)
+clima .
+clima
+clima[]
