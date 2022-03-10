@@ -56,19 +56,20 @@ topic <- data.frame(words=c(dict,dict1))
 topic
 
 topic$words <- str_trim(topic$words)
-topic$words <- str_replace_all(topic$words,pattern="[\\s]","%20")
+topic$words <- str_replace_all(topic$words,pattern="[\\s]","")
 topic$words <- str_replace(topic$words, pattern = "\"","")
 topic$words <- str_replace(topic$words, pattern =":","")
 topic$words <- str_replace(topic$words,pattern ="[(]","")
 topic$words <- str_replace(topic$words,pattern ="[)]","")
-topic$words <- str_replace(topic$words,pattern ="🔑%20Key%20message%20about%20language%20use","")
+topic$words <- str_replace(topic$words,pattern ="🔑&Key&message&0about&language&use","")
 topic$words <- str_replace(topic$words,pattern ="Biodiversity","")
-topic$words <- str_replace(topic$words,pattern ="Glossary%20of%20terms","")
-topic$words <- str_replace(topic$words,pattern ="Executive%20Order%20EO%2013693","")
-topic$words <- str_replace(topic$words,pattern ="Community%20Choice%20Aggregation%20CCA","")
-topic$words <- str_replace(topic$words,pattern ="Weather%20vs.%20climate","")
-topic$words <- str_replace(topic$words,pattern ="carbon%20dioxide%20and%20related%20terms","")
+topic$words <- str_replace(topic$words,pattern ="Glossary&of&terms","")
+topic$words <- str_replace(topic$words,pattern ="Executive&Order&EO%2013693","")
+topic$words <- str_replace(topic$words,pattern ="Community&Choice&Aggregation&CCA","")
+topic$words <- str_replace(topic$words,pattern ="Weather&vs.&climate","")
+topic$words <- str_replace(topic$words,pattern ="carbon&dioxide&and&related&terms","")
 topic$words <- str_replace(topic$words,pattern ="Additionality","")
+topic$words <- str_replace(topic$words,pattern ="-","&")
 typeof(topic)
 topic <- data.frame(topic)
 topic <- topic[!apply(topic == "", 1, all), ]
@@ -83,10 +84,10 @@ api_link <- "https://api.propublica.org/congress/v1/bills/subjects/"
 links1 <- as.data.frame(stri_paste(api_link,topic$words,".json"))
 links1
 
-links1 <- as.data.frame(1:74)
+links1 <- as.data.frame(1:75)
 
 i <- 1
-for (i in 1:74){
+for (i in 1:75){
   links1$key <- c(key)
 }
 
@@ -94,19 +95,27 @@ for (i in 1:74){
 link <- as.vector(stri_paste(api_link,topic,".json"))
 link
 
+new <- as.vector("xxxx")
+
 i <- 1
 for(i in 1:74){
-  links1$link <- c(stri_paste(api_link,topic[i, 1],".json"))
-  links1$link[[nrow+1]] <- links1$link
+  new <- append(new,(stri_paste(api_link,topic[i, 1],".json")))
 }
 
+links1$links <- new
 
-1i <- 1
-for(i in 1:nrow(links1)){
-  result <- RCurl::getURL(links1$`stri_paste(words,".json")`,
+
+links1 <- links1[-c(1), ]
+
+i <- 1
+for(i in 1:nrow(links)){
+  result <- RCurl::getURL(links1$links,
                           httpheader = c(links1$key))
-  Sys.sleep(1)
   cat(result)
+  Sys.sleep(1)
 }
+
+
+
 
 
