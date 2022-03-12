@@ -11,6 +11,9 @@ library(stringi)
 library(stringr)
 library(readr)
 library(rvest)
+library(rio)
+library(ProPublicaR)
+
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
@@ -57,7 +60,7 @@ topic
 
 topic$words <- str_trim(topic$words)
 topic$words <- str_replace_all(topic$words,pattern="[\\s]","%20")
-topic$words <- str_replace(topic$words, pattern = "\"","")
+topic$words <- str_replace_all(topic$words, pattern = "\"","")
 topic$words <- str_replace(topic$words, pattern =":","")
 topic$words <- str_replace(topic$words,pattern ="[(]","")
 topic$words <- str_replace(topic$words,pattern ="[)]","")
@@ -72,6 +75,13 @@ topic$words <- str_replace(topic$words,pattern ="Additionality","")
 topic$words <- str_replace(topic$words,pattern ="-","%20")
 topic$words <- str_replace(topic$words,pattern ="carbon%20dioxide%20and%20related%20terms","")
 topic$words <- str_replace(topic$words,pattern ="GWP%20Global%20Warming%20Potential","")
+topic$words <- str_replace(topic$words,pattern ="EV%20electric%20vehicle","")
+topic$words <- str_replace(topic$words,pattern ="climate%20and%20related%20terms","")
+topic$words <- str_replace(topic$words,pattern ="Utility","")
+topic$words <- str_replace(topic$words,pattern ="Vintage","")
+topic$words <- str_replace(topic$words,pattern ="Unbundled","")
+topic$words <- str_replace(topic$words,pattern ="Short%20Ton","")
+topic$words <- str_replace(topic$words,pattern ="retail%20competition","")
 
 typeof(topic)
 topic <- data.frame(topic)
@@ -82,43 +92,41 @@ topic
 
 #api                #           #
 
-api_link <- "https://api.propublica.org/congress/v1/bills/subjects/"
+q_link <- "https://api.propublica.org/congress/v1/bills/search.json?query="
 
-links1 <- as.data.frame(stri_paste(api_link,topic$words,".json"))
-links1
-
-links1 <- as.data.frame(1:75)
+links2 <- as.data.frame(stri_paste(q_link,topic$words))
+links2 <- as.data.frame(1:68)
 
 i <- 1
-for (i in 1:75){
-  links1$key <- c(key)
+for (i in 1:68){
+  links2$key <- c(key)
 }
 
+r_link <- as.vector(stri_paste(q_link,topic))
+r_link
 
-link <- as.vector(stri_paste(api_link,topic,".json"))
-link
-
-new <- as.vector("xxxx")
+vec <- as.vector("xxxx")
 
 i <- 1
-for(i in 1:74){
-  new <- append(new,(stri_paste(api_link,topic[i, 1],".json")))
+for(i in 1:67){
+  vec <- append(vec,(stri_paste(q_link,topic[i, 1])))
 }
 
-links1$links <- new
+links2$r_link <- vec
 
+links2 <- links2[-c(1), ]
 
-links1 <- links1[-c(1), ]
+write.csv(links2, "links3.csv")
+
+query<- import("links3.csv")
+
 
 i <- 1
-for(i in 1:nrow(links)){
-  result <- RCurl::getURL(links1$links,
-                          httpheader = c(links1$key))
+for(i in 1:nrow(query)){
+  result <- RCurl::getURL(query$r_link,
+                          httpheader = c(query$key))
   cat(result)
   Sys.sleep(1)
 }
-
-
-
 
 
