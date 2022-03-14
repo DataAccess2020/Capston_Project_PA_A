@@ -122,11 +122,14 @@ query<- import("links3.csv")
 
 
 i <- 1
-for(i in 1:nrow(query)){
+for(i in 1:25 (query)){
   result <- RCurl::getURL(query$r_link,
                           httpheader = c(query$key))
-  cat(result)
   Sys.sleep(1)
+  cat(result)
 }
 
 
+result
+
+write.csv(result, "bills.csv")
