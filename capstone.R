@@ -12,8 +12,8 @@ library(stringr)
 library(readr)
 library(rvest)
 library(rio)
-library(ProPublicaR)
-
+library(SPARQL)
+library(XML)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
@@ -118,18 +118,47 @@ links2 <- links2[-c(1), ]
 
 write.csv(links2, "links3.csv")
 
+
+
 query<- import("links3.csv")
 
 
-i <- 1
-for(i in 1:25 (query)){
-  result <- RCurl::getURL(query$r_link,
-                          httpheader = c(query$key))
+s_query <- as.data.frame  (query$key[1:3])
+s_query$link <- c("https://api.propublica.org/congress/v1/bills/search.json?query=Climate%20Change",
+                                "https://api.propublica.org/congress/v1/bills/search.json?query=carbon%20emissions",
+                                "https://api.propublica.org/congress/v1/bills/search.json?query=sea%20level%20rise")
+
+colnames(s_query) <- c("key", "que_link")
+
+
+q_offset <- c(0,20, 40, 60,80,100,120,140,160,180,200,
+                  "220","240","260", "280","300","320","340","360","380","400",
+                  "420","440","460","480","500","520","540","560","580","600",
+                  "620","640","660","680","700","720","740","760","780","800",
+                  "820","840", "860","880","900","920","940","960","980", "1000")
+
+
+result <- vector(mode = "list", length = 1000)
+
+i= 0
+for (i in 1:length(q_offset)){
+ result <- RCurl::getURL(s_query$que_link,
+                          httpheader = c(s_query$key))
   Sys.sleep(1)
-  cat(result)
+  cat(i," ")
 }
 
+result <- as.list(result)
 
-result
 
-write.csv(result, "bills.csv")
+
+
+########
+ofset 20 
+mode "list" leght 1000
+assegno a result ((i))
+content result
+
+
+
+
