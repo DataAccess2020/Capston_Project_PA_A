@@ -14,6 +14,7 @@ library(rvest)
 library(rio)
 library(SPARQL)
 library(XML)
+library(tm)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
@@ -118,46 +119,36 @@ links2 <- links2[-c(1), ]
 
 write.csv(links2, "links3.csv")
 
-
-
 query<- import("links3.csv")
 
 
 s_query <- as.data.frame  (query$key[1:3])
-s_query$link <- c("https://api.propublica.org/congress/v1/bills/search.json?query=Climate%20Change",
+s_query$link <- c("https://api.propublica.org/congress/v1/bills/search.json?query=climate%20change",
                                 "https://api.propublica.org/congress/v1/bills/search.json?query=carbon%20emissions",
-                                "https://api.propublica.org/congress/v1/bills/search.json?query=sea%20level%20rise")
+                                "https://api.propublica.org/congress/v1/bills/search.json?query= sea%20level%20rise")
 
 colnames(s_query) <- c("key", "que_link")
 
 
-q_offset <- c(0,20, 40, 60,80,100,120,140,160,180,200,
+q_offset <- c( "0","20", "40", "60","80","100","120","140","160","180","200",
                   "220","240","260", "280","300","320","340","360","380","400",
                   "420","440","460","480","500","520","540","560","580","600",
                   "620","640","660","680","700","720","740","760","780","800",
-                  "820","840", "860","880","900","920","940","960","980", "1000")
+                  "820","840", "860","880","900","920","940","960","980")
 
-
-result <- vector(mode = "list", length = 1000)
+result <- vector(mode = "list")
 
 i= 0
-for (i in 1:length(q_offset)){
- result <- RCurl::getURL(s_query$que_link,
+for (i in 1:length(q_offset)){ 
+step <- RCurl::getURL(paste0(s_query$que_link, ",","offset=", q_offset[i]),
                           httpheader = c(s_query$key))
+result <- append.xmlNode(result, step)
   Sys.sleep(1)
-  cat(i," ")
+  cat(q_offset[i]," ")
 }
 
-result <- as.list(result)
 
 
-
-
-########
-ofset 20 
-mode "list" leght 1000
-assegno a result ((i))
-content result
 
 
 
