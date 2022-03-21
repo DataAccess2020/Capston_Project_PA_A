@@ -10,6 +10,8 @@ output:
 ---
 ![Source: https://unimi.it](https://sesar.di.unimi.it/wp-content/themes/acqualiofilizzata/images/secondlogo-header.png)
 
+# __WARNING DATA ARE WRONG, I NOTICE TOO LATE__ 
+
 ## Introduction and goals of the project
 
 Since 1969 the attention to de climate increased, in 2018 [Greta Thunberg](https://en.wikipedia.org/wiki/Greta_Thunberg) made the climate crisis enter in the public debate. In 2021 in Milan Greta made another astonishing discourse condemn the fact that politicians just speak about climate changes and do nothing concrete. Considering this I decided to investigate whether the U.S. Congress is enacting laws against climate change. To do so I used the [API](https://www.mulesoft.com/resources/api/what-is-an-api) of the U.S congress provided by [Propublica](https://projects.propublica.org/api-docs/congress-api/). I expect the democrat party to be more active in the Topic of climate crisis. I'm also expecting (hoping) for an increase of promulgation of law against the climate crisis. To conduct My research I Used [R studio](https://www.rstudio.com) to conduct the analysis, and [GitHub](https://github.com) to collaborate with peers. The aim of this paper is to highlights what is the U.S. congress doing against climate changing and if this attention is increased over time. I chose a specific issue related to climate changing **the sea level rising** because it affects New York and Miami, metropolis that the U.S: congress must protect. 
@@ -46,6 +48,7 @@ library(rjson)
 library(lubridate)
 library(tidytext)
 library(wordcloud2)
+library(bibtex)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
@@ -72,6 +75,7 @@ library(tm)
 library(rjson)
 library(tidytext)
 library(wordcloud2)
+library(bibtex)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
@@ -235,7 +239,7 @@ i= 0
 for (i in 1:length(q_offset)){ 
 step <- RCurl::getURL(paste0(s_query$que_link, ",","offset=", q_offset[i]),
                           httpheader = c(s_query$key))
-result <- append.xmlNode(result, step)
+result <- append(result, step)
   Sys.sleep(1)
   cat(q_offset[i]," ")
 }
@@ -371,19 +375,13 @@ colnames(b_stit) <- c("empty", "title", "id")
 b_stit$title <- as.character(b_stit$title)
 b_stit$title <- removeNumbers(b_stit$title)
 
-##split the variable 'argomento' into its single 'units of text' ('tokens'), in this case words
-
 titlew<- b_stit %>% 
   select(title, id) %>% 
   unnest_tokens(split_titlew, title, token="ngrams", n=1)
 
-##remove stop words, and other words I don't want to include
-
 filtertit<- titlew %>% 
   filter(!split_titlew %in% stop_words$word) %>% 
   filter(!split_titlew %in% stop_words$word)
-
-##count the most common bigrams
 
 words_count <- filtertit %>%
   count(split_titlew)
@@ -394,37 +392,97 @@ words_count <- filtertit %>%
 wordcloud2(words_count, size = 1.6)
 ```
 
+Whit this plot I wanted to highlights the soenators of which party signed and co sponsored more bills. at list in my data seems that the idea that democrats care more about climate changes is true. 
 
+```{r, out.width = '95%', fig.align = 'center', plot1}
 
+plot1 <- data.frame(
+  party= c("rep", "dem"),
+  value= c(18175, 28525)
+)
 
-
-```{r, include= FALSE}
-
+ggplot(plot1, aes(x=party,y= value)) +
+  geom_bar(stat= "identity")+
+  theme()
 
 ```
 
+I also wanted to see if democrats are the first to promote the bills.
+
+```{r, out.width = '95%', fig.align = 'center', plot2}
+colnames(spo_part) <- c("empty", "party", "id")
 
 
-```{r, include= FALSE}
+spo_part <- spo_part %>%
+  group_by(party)%>%
+  count()
 
+ggplot(spo_part, aes(x=party,y= n)) +
+  geom_bar(stat= "identity")+
+  theme()
 
 ```
 
+With this graph I wanted to see if the trend of publishing bills in contrast to the climate changes increase over time. Unfortunately I notice here my mistake
+
+```{r, out.width = '95%', fig.align = 'center', plot3}
+colnames(i_date) <- c("empty", "date", "id")
 
 
-```{r bibliography, eval= FALSE}
+i_date <- i_date%>%
+  group_by(date)%>%
+  count()
+
+ggplot(i_date, aes(x=date, y= n)) +
+  geom_line() +
+  theme_bw()
+```
+
+To investigate for the mistake I found that I had only 35 bills not 2000 as I was thinking.
+
+```{r  focusing on the mistake,}
+bid <- list()
+i <- 1
+j <- 1
+for(i in 1:100){
+  for(j in 1:20){
+    step <- sponsor_list[[i]][[j]][[1]]
+    bid[[length(bid)+1]] <- step
+  }
+}
+
+tic <- unique(bid)
+```
+
+## What I learned 
+
+- I learned so much in this course even if I frequented just the last 3 lecture, I was able to scrape data from website and tested my self in an other challenge. This time I failed because I Made that mistake. I am really disappointed but I know I give it all.
+
+- I learned that I have fantastic colleagues And I have to say thanks to them because if I had something a bit fuzy they helped me figure it out so thanks You!
+
+- I have to admit that even if I am sad because I couldn't do the analysis properlly I did something that I wasn't able to do before.
+
+- I always liked plot and data visualization and I am sad I just let them gray and with not labels.
+
+
+## Bibliography
 
 - Ann Conyers, Zella, Richard Grant, and Shouraseni Sen Roy. 2019. “Sea Level Rise in Miami Beach: Vulnerability and Real Estate Exposure.” The Professional Geographer 71 (2): 278–91. [](https://doi.org/10.1080/00330124.2018.1531037).
+
 - Brainard, Jeffrey, and Richard Monastersky. 2007. “Congress Debates Climate Change.” The Chronicle of Higher Education 53 (25). [](https://go-gale-com.pros1.lib.unimi.it/ps/i.do?p=AONE&sw=w&issn=00095982&v=2.1&it=r&id=GALE%7CA159933410&sid=googleScholar&linkaccess=abs).
-“Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session   Note.” 2016. Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session, I–85.
-Gornitz, Vivien, Stephen Couch, and Ellen K Hartig. 2001. “Impacts of Sea Level Rise in the New York City Metropolitan Area.” Global and Planetary Change, Global and Regional Sea-level Changes and the Hydrological Cycle, 32 (1): 61–88. https://doi.org/10.1016/S0921-8181(01)00150-3.
-———. 2002. “Impacts of Sea Level Rise in the New York City Metropolitan Area,” 28.
-Klüver, Heike, and Iñaki Sagarzazu. 2016a. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295.
-———. 2016b. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295.
-“Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998   Note.” 1998. Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998, i–67.
-Park, Hyung Sam, Xinsheng Liu, and Arnold Vedlitz. n.d. “Framing Climate Policy Debates: Science, Network, and U.S. Congress, 1976-2007,” 23.
-Tollefson, Jeff. 2015. “Pope Francis Pushes US Congress on Poverty and Climate.” Nature (London). https://doi.org/10.1038/nature.2015.18427.
-“Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session   Note.” 2011. Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session, I–70.
+
+- “Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session   Note.” 2016. Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session, I–85.
+
+- Gornitz, Vivien, Stephen Couch, and Ellen K Hartig. 2001. “Impacts of Sea Level Rise in the New York City Metropolitan Area.” Global and Planetary Change, Global and Regional Sea-level Changes and the Hydrological Cycle, 32 (1): 61–88. https://doi.org/10.1016/S0921-8181(01)00150-3. 2002. “Impacts of Sea Level Rise in the New York City Metropolitan Area,” 28.
+
+- Klüver, Heike, and Iñaki Sagarzazu. 2016a. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295. 2016b. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295.
+
+- “Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998   Note.” 1998. Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998, i–67.
+
+- Park, Hyung Sam, Xinsheng Liu, and Arnold Vedlitz. n.d. “Framing Climate Policy Debates: Science, Network, and U.S. Congress, 1976-2007,” 23.
+
+- Tollefson, Jeff. 2015. “Pope Francis Pushes US Congress on Poverty and Climate.” Nature (London). https://doi.org/10.1038/nature.2015.18427.
+
+- “Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session   Note.” 2011. Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session, I–70.
 
 
-```
