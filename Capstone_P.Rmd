@@ -1,0 +1,430 @@
+---
+title: "US. Congress on climate changes"
+author: "Paolo Amantini, 993585"
+date: '2022-03-21'
+output: 
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    bibliography: references.bib 
+---
+![Source: https://unimi.it](https://sesar.di.unimi.it/wp-content/themes/acqualiofilizzata/images/secondlogo-header.png)
+
+## Introduction and goals of the project
+
+Since 1969 the attention to de climate increased, in 2018 [Greta Thunberg](https://en.wikipedia.org/wiki/Greta_Thunberg) made the climate crisis enter in the public debate. In 2021 in Milan Greta made another astonishing discourse condemn the fact that politicians just speak about climate changes and do nothing concrete. Considering this I decided to investigate whether the U.S. Congress is enacting laws against climate change. To do so I used the [API](https://www.mulesoft.com/resources/api/what-is-an-api) of the U.S congress provided by [Propublica](https://projects.propublica.org/api-docs/congress-api/). I expect the democrat party to be more active in the Topic of climate crisis. I'm also expecting (hoping) for an increase of promulgation of law against the climate crisis. To conduct My research I Used [R studio](https://www.rstudio.com) to conduct the analysis, and [GitHub](https://github.com) to collaborate with peers. The aim of this paper is to highlights what is the U.S. congress doing against climate changing and if this attention is increased over time. I chose a specific issue related to climate changing **the sea level rising** because it affects New York and Miami, metropolis that the U.S: congress must protect. 
+
+## Choice of the subject 
+
+I chose to investigate about climate changes Because there is still a long way to go to solve this problem. As Greta Thunberg reminds us in 2021 is not enough to stop at words but we need the facts. So I would like to see concrete actions taken by the U.S. Congress to address the climate crisis. Also the New Biden legislation promised more action against climate changes that the Trump ones. The pandemic and other issue may o have obstructed the green transaction. 
+
+
+# The R code explanation
+
+Here I loaded the `library` that i will use. I also added my email and my R version, this is to allow websites that I scraped to get in touch with me, and do statistic analysis of what software researcher use to scrape their web site.
+
+### pakages used:
+
+```{r setup, eval=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(httr)
+library(curl)
+library(tidyr)
+library(RCurl)
+library(jsonlite)
+library(stringi)
+library(stringr)
+library(readr)
+library(rvest)
+library(rio)
+library(SPARQL)
+library(XML)
+library(tm)
+library(rjson)
+library(lubridate)
+library(tidytext)
+library(wordcloud2)
+
+email <- "paolo.amantini@studenti.unimi.it"
+user_agent <- R.Version()$version.string
+```
+
+
+```{r, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(httr)
+library(curl)
+library(tidyr)
+library(RCurl)
+library(jsonlite)
+library(stringi)
+library(stringr)
+library(readr)
+library(rvest)
+library(rio)
+library(SPARQL)
+library(XML)
+library(tm)
+library(rjson)
+library(tidytext)
+library(wordcloud2)
+
+email <- "paolo.amantini@studenti.unimi.it"
+user_agent <- R.Version()$version.string
+
+
+co_party <- import("party.csv") 
+spo_part<- import("sponsor_party.csv")
+b_stit<- import("stitle.csv")
+sum_cos<- import("pp.csv")
+i_date<- import("promulgate.csv")
+```
+
+## Data Scraping
+
+I needed a "lexicon" to conduct my research so I decided to do some data scraping in website about climate changes.
+I used this two website: [epa.gov](https://www.epa.gov/green-power-markets/glossary), and [dictionary.com](https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms). I need the lexicon to download all the bills containing that word or words in manners that they will related to climate change.
+
+**practice**
+
+I checked if the two website had the [robot.txt](https://bit.ly/3wngaKE), after that I create two object `f_url` and `s_url` and assigned to them the URL of the two web site. Using the `GET` function I scraped the word I needed. I added the heathers with my email and R studio version as already said. The words are saved in two different vectors `dict` and `dict1`.  
+ 
+```{r pressure, eval=FALSE}
+f_url <- "https://www.epa.gov/green-power-markets/glossary"
+s_url <- "https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms"
+
+dict <- httr::GET(url= f_url,
+                 
+                 add_headers(
+                   
+                   From= email,
+                   
+                   `User-Agent`= R.Version()$version.string
+                   
+                 )
+                 
+) %>%
+  rvest::read_html() %>%
+  html_elements(css="dt strong")%>%
+  html_text()
+
+
+dict1 <- httr::GET(url= s_url,
+                  
+                  add_headers(
+                    
+                    From= email,
+                    
+                    `User-Agent`= R.Version()$version.string
+                    
+                  )
+                  
+) %>%
+ rvest::read_html() %>%
+  html_elements(css="strong")%>%
+  html_text()
+dict1
+```
+
+I assigned the two vectors to `topic` a data frame and after cleaning the words I got 67 "word/s". My lexicon was completed. To clean the data I used the regular expressions.
+
+```{r, eval=FALSE}
+topic <- data.frame(words=c(dict,dict1))
+topic
+
+topic$words <- str_trim(topic$words)
+topic$words <- str_replace_all(topic$words,pattern="[\\s]","%20")
+topic$words <- str_replace_all(topic$words, pattern = "\"","")
+topic$words <- str_replace(topic$words, pattern =":","")
+topic$words <- str_replace(topic$words,pattern ="[(]","")
+topic$words <- str_replace(topic$words,pattern ="[)]","")
+topic$words <- str_replace(topic$words,pattern ="🔑%20Key%20message%20about%20language%20use","")
+topic$words <- str_replace(topic$words,pattern ="Biodiversity","")
+topic$words <- str_replace(topic$words,pattern ="Glossary%20of%20terms","")
+topic$words <- str_replace(topic$words,pattern ="Executive%20Order%20EO%2013693","")
+topic$words <- str_replace(topic$words,pattern ="Community%20Choice%20Aggregation%20CCA","")
+topic$words <- str_replace(topic$words,pattern ="Weather%20vs.%20climate","")
+topic$words <- str_replace(topic$words,pattern ="carbon%20dioxide%20and&related%20terms","")
+topic$words <- str_replace(topic$words,pattern ="Additionality","")
+topic$words <- str_replace(topic$words,pattern ="-","%20")
+topic$words <- str_replace(topic$words,pattern ="carbon%20dioxide%20and%20related%20terms","")
+topic$words <- str_replace(topic$words,pattern ="GWP%20Global%20Warming%20Potential","")
+topic$words <- str_replace(topic$words,pattern ="EV%20electric%20vehicle","")
+topic$words <- str_replace(topic$words,pattern ="climate%20and%20related%20terms","")
+topic$words <- str_replace(topic$words,pattern ="Utility","")
+topic$words <- str_replace(topic$words,pattern ="Vintage","")
+topic$words <- str_replace(topic$words,pattern ="Unbundled","")
+topic$words <- str_replace(topic$words,pattern ="Short%20Ton","")
+topic$words <- str_replace(topic$words,pattern ="retail%20competition","")
+
+typeof(topic)
+topic <- data.frame(topic)
+topic <- topic[!apply(topic == "", 1, all), ]
+topic <- data.frame(topic)
+topic
+```
+
+#  Request to the API
+
+To download the data form *ProPublica Congress API* I had to sign up to their website and I receive an *API key*. I create an object called `q_link` and assigned to it the query basic form. In the next step I created a data frame called `links2` in it I pasted to de basic query the lexicon. i also assigned to it in a column the API key  to get access essentil to get acces to the bills. Having the API key and te query format I save it as .csv file to avoid to scrape data every time I started the R session.
+
+```{r,eval=FALSE}
+q_link <- "https://api.propublica.org/congress/v1/bills/search.json?query="
+
+links2 <- as.data.frame(stri_paste(q_link,topic$words))
+links2 <- as.data.frame(1:68)
+
+i <- 1
+for (i in 1:68){
+  links2$key <- c(key)
+}
+
+r_link <- as.vector(stri_paste(q_link,topic))
+r_link
+
+vec <- as.vector("xxxx")
+
+i <- 1
+for(i in 1:67){
+  vec <- append(vec,(stri_paste(q_link,topic[i, 1])))
+}
+
+links2$r_link <- vec
+
+links2 <- links2[-c(1), ]
+
+write.csv(links2, "links3.csv")
+```
+
+**Note:** since the topic of climate change is very broad, and my time was limited I had to reduce the research to only 3 headings.In this way I could go deep at list in these aspects.
+
+clarified this aspect, I chose *"climate change","carbon emissions"* and *"sea level rise"*. This choice has been guided by the fact that if rising seas persist some cities like New York and Miami would be submerged. The fact that these are two metropolis I'm expecting more attention about it (V.Gornitz, 2002). Once selected the query I was ready to download data from the ProPublica API. This API like most APIs makes me download data in **JSON** format. This format is often used because: 
+
+- is self-describing. The syntax and hierarchical structure of the JSON strings can in some cases be interpreted by applications that do not already know what data to expect. 
+- JSON is simple text. This fact makes it suitable and safe for transferring across platforms and operating systems that do not readily share more complex document types. As text, JSON can also be readily displayed and edited in simple editors.
+- JSON is compact. An average JSON string is about two thirds of the size of the same data in XML.
+- JSON is easy to learn, easy to read, and easy to understand.
+
+```{r,eval=FALSE}
+query<- import("links3.csv")
+
+s_query <- as.data.frame  (query$key[1:3])
+s_query$link <- c("https://api.propublica.org/congress/v1/bills/search.json?query=climate%20change",
+                                "https://api.propublica.org/congress/v1/bills/search.json?query=carbon%20emissions",
+                                "https://api.propublica.org/congress/v1/bills/search.json?query= sea%20level%20rise")
+
+colnames(s_query) <- c("key", "que_link")
+```
+
+The ProPublica API give the result in groups of 20 from the most recent to the oldest bills. so I created an offset 20 until reached the thousand bills; i called it `q_offset`. I also created a for loop in wich I explicate do the request to the API this is a key point. I had to remove the 3rd and multiples of the results because they were empty.
+
+```{r,eval=FALSE}
+q_offset <- c( "0","20", "40", "60","80","100","120","140","160","180","200",
+                  "220","240","260", "280","300","320","340","360","380","400",
+                  "420","440","460","480","500","520","540","560","580","600",
+                  "620","640","660","680","700","720","740","760","780","800",
+                  "820","840", "860","880","900","920","940","960","980")
+
+result <- vector(mode = "list")
+
+i= 0
+for (i in 1:length(q_offset)){ 
+step <- RCurl::getURL(paste0(s_query$que_link, ",","offset=", q_offset[i]),
+                          httpheader = c(s_query$key))
+result <- append.xmlNode(result, step)
+  Sys.sleep(1)
+  cat(q_offset[i]," ")
+}
+
+del <- seq(0,150, by = 3)
+prov<- result[-c(del)]
+```
+
+## Extracting the data 
+
+These Two for loops allows me to browse into the nested list gotten from the request to the API. 
+
+```{r,eval=FALSE}
+bills_list <- list()
+
+i <- 1
+for (i in 1:100){
+  step <- fromJSON(prov[[i]])
+  bills_list[[length(bills_list)+1]] <- step
+}
+
+
+sponsor_list <- list()
+i <- 1
+for (i in 1:100){
+  step <- bills_list[[i]][[3]][[1]][[3]]
+  sponsor_list[[length(sponsor_list)+1]] <- step
+}
+```
+
+I first extract using index the co sponsor party, getting a data frame withe the number of Democratic and republicans that sponsorship the bills.
+
+```{r,eval=FALSE}
+try <- list()
+
+for(i in 1:100){
+  for(j in 1:20){
+    step <- sponsor_list[[i]][[j]][[25]]
+    try[[length(try)+1]] <- step
+  }
+}
+
+id <- (1:1650)
+party$id <-  id 
+```
+
+I also extracted which party promoted the bills to see in bought way if is true that democrats care more about the evirnment.
+
+```{r,eval=FALSE}
+PS <- list()
+i <- 1
+j <- 1
+for(i in 1:100){
+  for(j in 1:20){
+    step <- sponsor_list[[i]][[j]][[12]]
+    PS[[length(PS)+1]] <- step
+  }
+}
+```
+
+In this loop I extracted the date of introduction of the bills.
+
+```{r,eval=FALSE}
+dat <- list()
+i <- 1
+j <- 1
+for(i in 1:100){
+  for(j in 1:20){
+    step <- sponsor_list[[i]][[j]][[17]]
+    dat[[length(dat)+1]] <- step
+  }
+}
+
+promulgate <- as.data.frame(do.call(rbind, dat))
+id <- (1:2000)
+promulgate$id <-  id 
+```
+
+with this loop I extract the short title of the bills to see which words were used to summarize the bills.
+
+```{r,eval=FALSE}
+tit <- list()
+i <- 1
+j <- 1
+for(i in 1:100){
+  for(j in 1:20){
+    step <- sponsor_list[[i]][[j]][[7]]
+    tit[[length(tit)+1]] <- step
+  }
+}
+```
+
+
+```{r,eval=FALSE}
+party$R <- as.numeric(party$R)
+party$D <- as.numeric(party$D)
+rep <- sum(party$R)
+dem <- sum(party$D)
+
+pol_par<- as.data.frame(rep)
+pol_par$dem <- as.data.frame(dem)
+```
+
+
+```{r, eval=FALSE}
+stop_words
+typeof(b_stit$title)
+b_stit$title <- as.character(b_stit$title)
+
+b_stit$title <- removeNumbers(b_stit$title)
+colnames(b_stit) <- c("empty", "title", "id")
+##split the variable 'argomento' into its single 'units of text' ('tokens'), in this case words
+
+titlew<- b_stit %>% 
+  select(title, id) %>% 
+  unnest_tokens(split_titlew, title, token="ngrams", n=1)
+
+##remove stop words, and other words I don't want to include
+
+filtertit<- titlew %>% 
+  filter(!split_titlew %in% stop_words$word) %>% 
+  filter(!split_titlew %in% stop_words$word)
+
+##count the most common bigrams
+
+words_count <- filtertit %>%
+  count(split_titlew)
+words_count
+```
+
+```{r, include= FALSE}
+colnames(b_stit) <- c("empty", "title", "id")
+b_stit$title <- as.character(b_stit$title)
+b_stit$title <- removeNumbers(b_stit$title)
+
+##split the variable 'argomento' into its single 'units of text' ('tokens'), in this case words
+
+titlew<- b_stit %>% 
+  select(title, id) %>% 
+  unnest_tokens(split_titlew, title, token="ngrams", n=1)
+
+##remove stop words, and other words I don't want to include
+
+filtertit<- titlew %>% 
+  filter(!split_titlew %in% stop_words$word) %>% 
+  filter(!split_titlew %in% stop_words$word)
+
+##count the most common bigrams
+
+words_count <- filtertit %>%
+  count(split_titlew)
+```
+
+
+```{r,out.width = '95%', fig.align = 'center'}
+wordcloud2(words_count, size = 1.6)
+```
+
+
+
+
+
+```{r, include= FALSE}
+
+
+```
+
+
+
+```{r, include= FALSE}
+
+
+```
+
+
+
+```{r bibliography, eval= FALSE}
+
+- Ann Conyers, Zella, Richard Grant, and Shouraseni Sen Roy. 2019. “Sea Level Rise in Miami Beach: Vulnerability and Real Estate Exposure.” The Professional Geographer 71 (2): 278–91. [](https://doi.org/10.1080/00330124.2018.1531037).
+- Brainard, Jeffrey, and Richard Monastersky. 2007. “Congress Debates Climate Change.” The Chronicle of Higher Education 53 (25). [](https://go-gale-com.pros1.lib.unimi.it/ps/i.do?p=AONE&sw=w&issn=00095982&v=2.1&it=r&id=GALE%7CA159933410&sid=googleScholar&linkaccess=abs).
+“Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session   Note.” 2016. Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session, I–85.
+Gornitz, Vivien, Stephen Couch, and Ellen K Hartig. 2001. “Impacts of Sea Level Rise in the New York City Metropolitan Area.” Global and Planetary Change, Global and Regional Sea-level Changes and the Hydrological Cycle, 32 (1): 61–88. https://doi.org/10.1016/S0921-8181(01)00150-3.
+———. 2002. “Impacts of Sea Level Rise in the New York City Metropolitan Area,” 28.
+Klüver, Heike, and Iñaki Sagarzazu. 2016a. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295.
+———. 2016b. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295.
+“Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998   Note.” 1998. Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998, i–67.
+Park, Hyung Sam, Xinsheng Liu, and Arnold Vedlitz. n.d. “Framing Climate Policy Debates: Science, Network, and U.S. Congress, 1976-2007,” 23.
+Tollefson, Jeff. 2015. “Pope Francis Pushes US Congress on Poverty and Climate.” Nature (London). https://doi.org/10.1038/nature.2015.18427.
+“Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session   Note.” 2011. Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session, I–70.
+
+
+```
