@@ -25,6 +25,7 @@ ggplot(spo_part, aes(x=party,y= n)) +
   theme()
 
 
+#qui ho notato l'errore
 colnames(i_date) <- c("empty", "date", "id")
 
 
