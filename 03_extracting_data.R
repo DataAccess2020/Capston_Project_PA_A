@@ -7,7 +7,7 @@ for (i in 1:length(r_list)){
   sub_list[[length(sub_list)+1]] <- step
 }
 
-sub_list[c(183:202)]= NULL
+#sub_list[c(183:202)]= NULL
 
 # extract bills id
 

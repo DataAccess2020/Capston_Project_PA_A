@@ -1,19 +1,18 @@
 #cloud words
 
-b_stit<- import("stitle.csv")
+api_d <- import("data_from_api.csv")
 
 stop_words
-typeof(b_stit$title)
+typeof(api_d$TITLE)
 colnames(b_stit) <- c("empty", "title", "id")
-b_stit$title <- as.character(b_stit$title)
 
-b_stit$title <- removeNumbers(b_stit$title)
-
+api_d$TITLE <- removeNumbers(api_d$TITLE)
 
 
-titlew<- b_stit %>% 
-  select(title, id) %>% 
-  unnest_tokens(split_titlew, title, token="ngrams", n=1)
+
+titlew<- api_d %>% 
+  select(TITLE, BILLS_id) %>% 
+  unnest_tokens(split_titlew, TITLE, token="ngrams", n=1)
 
 
 filtertit<- titlew %>% 

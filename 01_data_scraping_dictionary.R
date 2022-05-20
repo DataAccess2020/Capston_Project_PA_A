@@ -18,7 +18,13 @@ library(rjson)
 library(lubridate)
 library(tidytext)
 library(wordcloud2)
-
+library(leaflet)
+library(ggmap)
+library(leaflet.extras)
+library(htmltools)
+library(maps)
+library(mapproj)
+library(mapdata)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string

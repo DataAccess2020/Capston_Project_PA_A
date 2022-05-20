@@ -1,10 +1,10 @@
 #downloading data from Propublica API
-query<- import("links3.csv")
+query <- import("links3.csv")
 
 
 s_query <- as.data.frame  (query$key[1:3])
 s_query$link <- c("https://api.propublica.org/congress/v1/bills/search.json?query=climate%20change",
-                  "https://api.propublica.org/congress/v1/bills/search.json?query=carbon%20emission",
+                  "https://api.propublica.org/congress/v1/bills/search.json?query=carbon%20emissions",
                   "https://api.propublica.org/congress/v1/bills/search.json?query=sea%20level%20rise")
 
 colnames(s_query) <- c("key", "que_link")
