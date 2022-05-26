@@ -1,29 +1,37 @@
 ---
 title: "US. Congress on climate changes"
 author: "Paolo Amantini, 993585"
-date: '2022-03-21'
+#date: '2022-03-21'
 output: 
   prettydoc::html_pretty:
     theme: cayman
     highlight: github
     bibliography: references.bib 
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
-![Source: https://unimi.it](https://sesar.di.unimi.it/wp-content/themes/acqualiofilizzata/images/secondlogo-header.png)
 
-# __WARNING DATA ARE WRONG, I NOTICE TOO LATE__ 
+**Abstract** On September 28, 2021 Greta Thunberg, in [her speech](https://www.youtube.com/watch?v=UryIL4kUcx8) called on the political "class" to not just talk but to act against what is the crisis of the 21st century.
+The purpose of this short paper is to highlight the decisions that the U.S.
+Congress is making to combat climate change.
+in addition, I will check which state and which party has proposed the most legislation with the exact goal of combating climate change.
+To access this data, I used ProPublica's API, and R studio software.
+The first part of this paper will explain the conde and the second part will discus the results.
 
-## Introduction and goals of the project
+# Research question
 
-Since 1969 the attention to de climate increased, in 2018 [Greta Thunberg](https://en.wikipedia.org/wiki/Greta_Thunberg) made the climate crisis enter in the public debate. In 2021 in Milan Greta made another astonishing discourse condemn the fact that politicians just speak about climate changes and do nothing concrete. Considering this I decided to investigate whether the U.S. Congress is enacting laws against climate change. To do so I used the [API](https://www.mulesoft.com/resources/api/what-is-an-api) of the U.S congress provided by [Propublica](https://projects.propublica.org/api-docs/congress-api/). I expect the democrat party to be more active in the Topic of climate crisis. I'm also expecting (hoping) for an increase of promulgation of law against the climate crisis. To conduct My research I Used [R studio](https://www.rstudio.com) to conduct the analysis, and [GitHub](https://github.com) to collaborate with peers. The aim of this paper is to highlights what is the U.S. congress doing against climate changing and if this attention is increased over time. I chose a specific issue related to climate changing **the sea level rising** because it affects New York and Miami, metropolis that the U.S: congress must protect. 
+How much attention do U.S. congressmen pay to environmental issues?
+how often do congressmen talk about climate change, the environment, and sustainability?
+Which political party is the most active on environmental issues?
 
-## Choice of the subject 
-
-I chose to investigate about climate changes Because there is still a long way to go to solve this problem. As Greta Thunberg reminds us in 2021 is not enough to stop at words but we need the facts. So I would like to see concrete actions taken by the U.S. Congress to address the climate crisis. Also the New Biden legislation promised more action against climate changes that the Trump ones. The pandemic and other issue may o have obstructed the green transaction. 
-
+This are the questions that I want to answer to.
+The climate change is one of the main issue of the *XXI* century; in this short paper I want to highlights the actions that the us congress is taking.
 
 # The R code explanation
 
-Here I loaded the `library` that i will use. I also added my email and my R version, this is to allow websites that I scraped to get in touch with me, and do statistic analysis of what software researcher use to scrape their web site.
+Here I loaded the `library` that i will use.
+I also added my email and my R version, this is to allow websites that I scraped to get in touch with me, and do statistic analysis of what software researcher use to scrape their web site.
 
 ### pakages used:
 
@@ -48,12 +56,16 @@ library(rjson)
 library(lubridate)
 library(tidytext)
 library(wordcloud2)
-library(bibtex)
+library(ggmap)
+library(htmltools)
+library(maps)
+library(mapproj)
+library(mapdata)
+library(usmap)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
 ```
-
 
 ```{r, include=FALSE}
 library(tidyverse)
@@ -73,30 +85,40 @@ library(SPARQL)
 library(XML)
 library(tm)
 library(rjson)
+library(lubridate)
 library(tidytext)
 library(wordcloud2)
-library(bibtex)
+library(ggmap)
+library(htmltools)
+library(maps)
+library(mapproj)
+library(mapdata)
+library(usmap)
 
 email <- "paolo.amantini@studenti.unimi.it"
 user_agent <- R.Version()$version.string
-
-
-co_party <- import("party.csv") 
-spo_part<- import("sponsor_party.csv")
-b_stit<- import("stitle.csv")
-sum_cos<- import("pp.csv")
-i_date<- import("promulgate.csv")
 ```
 
 ## Data Scraping
 
 I needed a "lexicon" to conduct my research so I decided to do some data scraping in website about climate changes.
-I used this two website: [epa.gov](https://www.epa.gov/green-power-markets/glossary), and [dictionary.com](https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms). I need the lexicon to download all the bills containing that word or words in manners that they will related to climate change.
+I used this two website: [epa.gov](https://www.epa.gov/green-power-markets/glossary), and [dictionary.com](https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms).
+I need the lexicon to download all the bills containing that word or words in manners that they will related to climate change.
 
 **practice**
 
-I checked if the two website had the [robot.txt](https://bit.ly/3wngaKE), after that I create two object `f_url` and `s_url` and assigned to them the URL of the two web site. Using the `GET` function I scraped the word I needed. I added the heathers with my email and R studio version as already said. The words are saved in two different vectors `dict` and `dict1`.  
- 
+I checked if the two website had the [robot.txt](https://bit.ly/3wngaKE), after that I create two object `f_url` and `s_url` and assigned to them the URL of the two web site.
+Then using the Google chrome ["SelectorGadget"](https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb) I inspected the two websites to Using the `GET`, `rvest::read_html()` and `html_elements()` functions I scraped the word I needed.
+I added the headers with my email and R studio version as already said.
+The words are saved in two different vectors `dict` and `dict1`.
+Scraping must be done politely, in fact if there are "API" you must use them.
+R is NOT able to render an HTML page but is able to parse it.
+Parsing consist in 3 steps:
+
+-   Validation
+-   Creating a "queryable" DOM (Document Object Model)
+-   R then converts node structure from C (libcurl) to R (Rcurl)
+
 ```{r pressure, eval=FALSE}
 f_url <- "https://www.epa.gov/green-power-markets/glossary"
 s_url <- "https://www.dictionary.com/e/climate-change-terms/#glossary-of-terms"
@@ -116,7 +138,6 @@ dict <- httr::GET(url= f_url,
   html_elements(css="dt strong")%>%
   html_text()
 
-
 dict1 <- httr::GET(url= s_url,
                   
                   add_headers(
@@ -134,7 +155,12 @@ dict1 <- httr::GET(url= s_url,
 dict1
 ```
 
-I assigned the two vectors to `topic` a data frame and after cleaning the words I got 67 "word/s". My lexicon was completed. To clean the data I used the regular expressions.
+I assigned the two vectors to `topic` a data frame and after cleaning the words I got 67 "word/s".
+My lexicon was completed.
+To clean the data I used the regular expressions.
+[Regular expressions](https://stringr.tidyverse.org/) *(regexprs)* are used to match and replace patterns in strings.
+Regular expressions are rally powerful and very used.
+It is important to escape special characters.
 
 ```{r, eval=FALSE}
 topic <- data.frame(words=c(dict,dict1))
@@ -172,9 +198,13 @@ topic <- data.frame(topic)
 topic
 ```
 
-#  Request to the API
+# Request to the API
 
-To download the data form *ProPublica Congress API* I had to sign up to their website and I receive an *API key*. I create an object called `q_link` and assigned to it the query basic form. In the next step I created a data frame called `links2` in it I pasted to de basic query the lexicon. i also assigned to it in a column the API key  to get access essentil to get acces to the bills. Having the API key and te query format I save it as .csv file to avoid to scrape data every time I started the R session.
+To download the data form *ProPublica Congress API* I had to sign up to their website and I receive an *API key*.
+I create an object called `q_link` and assigned to it the query basic form.
+In the next step I created a data frame called `links2` in it I pasted to de basic query the lexicon.
+i also assigned to it in a column the API key to get access essentil to get acces to the bills.
+Having the API key and te query format I save it as .csv file to avoid to scrape data every time I started the R session.
 
 ```{r,eval=FALSE}
 q_link <- "https://api.propublica.org/congress/v1/bills/search.json?query="
@@ -204,14 +234,19 @@ links2 <- links2[-c(1), ]
 write.csv(links2, "links3.csv")
 ```
 
-**Note:** since the topic of climate change is very broad, and my time was limited I had to reduce the research to only 3 headings.In this way I could go deep at list in these aspects.
+**Note:** since the topic of climate change is very broad, and my time was limited I had to reduce the research to only 3 headings.
+In this way I could go deep at list in these aspects.
 
-clarified this aspect, I chose *"climate change","carbon emissions"* and *"sea level rise"*. This choice has been guided by the fact that if rising seas persist some cities like New York and Miami would be submerged. The fact that these are two metropolis I'm expecting more attention about it (V.Gornitz, 2002). Once selected the query I was ready to download data from the ProPublica API. This API like most APIs makes me download data in **JSON** format. This format is often used because: 
+Clarified this aspect, I chose *"climate change","carbon emissions"* and *"sea level rise"*.
+This choice has been guided by the fact that if rising seas persist some cities like New York and Miami would be submerged.
+The fact that these are two metropolis I'm expecting more attention about it (V.Gornitz, 2002).
+Once selected the query I was ready to download data from the ProPublica API. This API like most APIs makes me download data in ***JSON*** format.
+This format is often used because:
 
-- is self-describing. The syntax and hierarchical structure of the JSON strings can in some cases be interpreted by applications that do not already know what data to expect. 
-- JSON is simple text. This fact makes it suitable and safe for transferring across platforms and operating systems that do not readily share more complex document types. As text, JSON can also be readily displayed and edited in simple editors.
-- JSON is compact. An average JSON string is about two thirds of the size of the same data in XML.
-- JSON is easy to learn, easy to read, and easy to understand.
+-   is self-describing. The syntax and hierarchical structure of the JSON strings can in some cases be interpreted by applications that do not already know what data to expect.
+-   JSON is simple text. This fact makes it suitable and safe for transferring across platforms and operating systems that do not readily share more complex document types. As text, JSON can also be readily displayed and edited in simple editors.
+-   JSON is compact. An average JSON string is about two thirds of the size of the same data in XML.
+-   JSON is easy to learn, easy to read, and easy to understand.
 
 ```{r,eval=FALSE}
 query<- import("links3.csv")
@@ -224,160 +259,234 @@ s_query$link <- c("https://api.propublica.org/congress/v1/bills/search.json?quer
 colnames(s_query) <- c("key", "que_link")
 ```
 
-The ProPublica API give the result in groups of 20 from the most recent to the oldest bills. so I created an offset 20 until reached the thousand bills; i called it `q_offset`. I also created a for loop in wich I explicate do the request to the API this is a key point. I had to remove the 3rd and multiples of the results because they were empty.
+The ProPublica API give the result in groups of 20 from the most recent to the oldest bills.
+So I created an offset 20 until reached the two thousands bills; I called it `q_offset`.
+I created three for loops to download the bills related to the queries.
+The `getURL` and `getURLContent` functions from the `RCurl` package are used to retrieve the source of a webpage, which is especially useful for retrieving pages for data processing,These functions download one or more URls.`paste0` concatenate vectors after converting to character.
+`append`Adds elements to a vector.
+The outcome of each for loop is saved in the object/s `result*`.
+I assigned them to `d_api` using `fromJSON`function takes the JSON file and returns the extracted data from the JSON file in the list format by default.
 
 ```{r,eval=FALSE}
-q_offset <- c( "0","20", "40", "60","80","100","120","140","160","180","200",
-                  "220","240","260", "280","300","320","340","360","380","400",
-                  "420","440","460","480","500","520","540","560","580","600",
-                  "620","640","660","680","700","720","740","760","780","800",
-                  "820","840", "860","880","900","920","940","960","980")
+v_off <- seq(0,2000, by = 20)
+q_offset <- as.character(v_off)
 
 result <- vector(mode = "list")
 
-i= 0
+i <-  0
 for (i in 1:length(q_offset)){ 
-step <- RCurl::getURL(paste0(s_query$que_link, ",","offset=", q_offset[i]),
-                          httpheader = c(s_query$key))
-result <- append(result, step)
+  step <- RCurl::getURL(
+                        paste0(s_query$que_link[1], "&","offset=", q_offset[i]),
+                               httpheader = c(s_query$key[1]))
+  result <- append(result, step)
   Sys.sleep(1)
   cat(q_offset[i]," ")
 }
 
-del <- seq(0,150, by = 3)
-prov<- result[-c(del)]
-```
-
-## Extracting the data 
-
-These Two for loops allows me to browse into the nested list gotten from the request to the API. 
-
-```{r,eval=FALSE}
-bills_list <- list()
-
-i <- 1
-for (i in 1:100){
-  step <- fromJSON(prov[[i]])
-  bills_list[[length(bills_list)+1]] <- step
+result1 <- vector(mode = "list")
+i <-  0
+for (i in 1:length(q_offset)){ 
+  step <- RCurl::getURL(
+                        paste0(s_query$que_link[2], "&","offset=", q_offset[i]),
+                         httpheader = c(s_query$key[2]))
+  result1 <- append(result1, step)
+  Sys.sleep(1)
+  cat(q_offset[i]," ")
 }
 
+result2 <- vector(mode = "list")
+i <-  0
+for (i in 1:length(q_offset)){ 
+  step <- RCurl::getURL(
+                         paste0(s_query$que_link[3], "&","offset=", q_offset[i]),
+                         httpheader = c(s_query$key[3]))
+  result2 <- append(result2, step)
+  Sys.sleep(1)
+  cat(q_offset[i]," ")
+}
 
-sponsor_list <- list()
+d_api <- c(result,result1,result2)
+
+r_list <- list()
+
 i <- 1
-for (i in 1:100){
-  step <- bills_list[[i]][[3]][[1]][[3]]
-  sponsor_list[[length(sponsor_list)+1]] <- step
+for (i in 1:length(d_api)){
+  step <- fromJSON(d_api[[i]])
+  r_list[[length(r_list)+1]] <- step
 }
 ```
 
-I first extract using index the co sponsor party, getting a data frame withe the number of Democratic and republicans that sponsorship the bills.
+## Extracting the data
+
+Now is time to extract the data that I will use, accessing to the list using registers I extract the effective data.
+the first for loop is just to extract the effective result.
+The second for loop extract the "bills id" an unique index for each bills.
+The second extract the sponsor state.
+The third the sponsor party.
+The forth extract the date of promulgation; The fifth the bills short title.
+The sixth extract id of the senator that proposed the bills.
+The last extract the primary subject of the bill.
 
 ```{r,eval=FALSE}
-try <- list()
+# extracting from the registers
 
-for(i in 1:100){
+sub_list <- list()
+i <- 1
+for (i in 1:length(r_list)){
+  step <- r_list[[i]][[3]][[1]][[3]]
+  sub_list[[length(sub_list)+1]] <- step
+}
+
+#sub_list[c(183:202)]= NULL
+
+# extract bills id
+
+id <- list()
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
   for(j in 1:20){
-    step <- sponsor_list[[i]][[j]][[25]]
-    try[[length(try)+1]] <- step
+    step <- sub_list[[i]][[j]][[1]]
+    id[[length(id)+1]] <- step
   }
 }
 
-id <- (1:1650)
-party$id <-  id 
-```
-
-I also extracted which party promoted the bills to see in bought way if is true that democrats care more about the evirnment.
-
-```{r,eval=FALSE}
-PS <- list()
-i <- 1
-j <- 1
-for(i in 1:100){
+# extract sponsor state
+s_s <- list()
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
   for(j in 1:20){
-    step <- sponsor_list[[i]][[j]][[12]]
-    PS[[length(PS)+1]] <- step
-  }
-}
-```
-
-In this loop I extracted the date of introduction of the bills.
-
-```{r,eval=FALSE}
-dat <- list()
-i <- 1
-j <- 1
-for(i in 1:100){
-  for(j in 1:20){
-    step <- sponsor_list[[i]][[j]][[17]]
-    dat[[length(dat)+1]] <- step
+    step <- sub_list[[i]][[j]][[11]]
+    s_s[[length(s_s)+1]] <- step
   }
 }
 
-promulgate <- as.data.frame(do.call(rbind, dat))
-id <- (1:2000)
-promulgate$id <-  id 
-```
+# extract sponsor party
+sp_p <- list()
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
+  for(j in 1:20){
+    step <- sub_list[[i]][[j]][[12]]
+    sp_p[[length(sp_p)+1]] <- step
+  }
+}
 
-with this loop I extract the short title of the bills to see which words were used to summarize the bills.
+#extract introduced date
 
-```{r,eval=FALSE}
+i_date <- list()
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
+  for(j in 1:20){
+    step <- sub_list[[i]][[j]][[17]]
+    i_date[[length(i_date)+1]] <- step
+  }
+}
+
+# extracty title
+
 tit <- list()
-i <- 1
-j <- 1
-for(i in 1:100){
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
   for(j in 1:20){
-    step <- sponsor_list[[i]][[j]][[7]]
+    step <- sub_list[[i]][[j]][[6]]
     tit[[length(tit)+1]] <- step
   }
 }
+
+# id senator who sponsored the bills 
+
+sen_id <- list()
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
+  for(j in 1:20){
+    step <- sub_list[[i]][[j]][[9]]
+    sen_id[[length(sen_id)+1]] <- step
+  }
+}
+
+# primary subject
+
+prim_subj <- list()
+i <- 0
+j <- 0
+for(i in 1:length(sub_list)){
+  for(j in 1:20){
+    step <- sub_list[[i]][[j]][[29]]
+    prim_subj[[length(prim_subj)+1]] <- step
+  }
+}
 ```
 
+Once I had all the data extracted I assigned them to an object and then to a data frame.
+at this point using `write.csv` I saved the data in an *.csv* file called *"data_from_api.csv"*.
 
 ```{r,eval=FALSE}
-party$R <- as.numeric(party$R)
-party$D <- as.numeric(party$D)
-rep <- sum(party$R)
-dem <- sum(party$D)
+id <- as.data.frame(do.call(rbind, id))
+s_s <- as.data.frame(do.call(rbind, s_s))
+sp_p <- as.data.frame(do.call(rbind, sp_p))
+i_date  <- as.data.frame(do.call(rbind, i_date))
+tit <- as.data.frame(do.call(rbind, tit))
+sen_id <- as.data.frame(do.call(rbind, sen_id))
+prim_subj <- as.data.frame(do.call(rbind, prim_subj))
 
-pol_par<- as.data.frame(rep)
-pol_par$dem <- as.data.frame(dem)
+#DF <- NULL
+DF <- data.frame(id, s_s, sp_p, i_date, sen_id, prim_subj, tit)
+
+colnames(DF) <- c("BILLS_id","sp_STATE","sp_PARTY","PROMULGATE","SEN_id","p_SUBJECT","TITLE")
+
+write.csv(DF, "data_from_api.csv")
 ```
 
+# Word cloud
 
-```{r, eval=FALSE}
+Now that I have all the data that I needed I started the analysis.
+First of all I used the bills' title previous extracted.
+After having removed the eventual number and *"stop words"* I divided the title in single words then using `wordcloud2` I created the words cloud, In which are presents the word that at list were appearing 15 times.
+
+```{r, include=FALSE}
+#cloud words
+
+api_d <- import("data_from_api.csv")
+
 stop_words
-typeof(b_stit$title)
-b_stit$title <- as.character(b_stit$title)
+typeof(api_d$TITLE)
+#colnames(b_stit) <- c("empty", "title", "id")
 
-b_stit$title <- removeNumbers(b_stit$title)
-colnames(b_stit) <- c("empty", "title", "id")
-##split the variable 'argomento' into its single 'units of text' ('tokens'), in this case words
+api_d$TITLE <- removeNumbers(api_d$TITLE)
 
-titlew<- b_stit %>% 
-  select(title, id) %>% 
-  unnest_tokens(split_titlew, title, token="ngrams", n=1)
+titlew<- api_d %>% 
+  select(TITLE, BILLS_id) %>% 
+  unnest_tokens(split_titlew, TITLE, token="ngrams", n=1)
 
-##remove stop words, and other words I don't want to include
 
 filtertit<- titlew %>% 
   filter(!split_titlew %in% stop_words$word) %>% 
   filter(!split_titlew %in% stop_words$word)
-
-##count the most common bigrams
 
 words_count <- filtertit %>%
   count(split_titlew)
 words_count
 ```
 
-```{r, include= FALSE}
-colnames(b_stit) <- c("empty", "title", "id")
-b_stit$title <- as.character(b_stit$title)
-b_stit$title <- removeNumbers(b_stit$title)
+```{r, eval=FALSE}
+#cloud words
 
-titlew<- b_stit %>% 
-  select(title, id) %>% 
-  unnest_tokens(split_titlew, title, token="ngrams", n=1)
+api_d <- import("data_from_api.csv")
+
+stop_words
+typeof(api_d$TITLE)
+#colnames(b_stit) <- c("empty", "title", "id")
+
+api_d$TITLE <- removeNumbers(api_d$TITLE)
+
+titlew<- api_d %>% 
+  select(TITLE, BILLS_id) %>% 
+  unnest_tokens(split_titlew, TITLE, token="ngrams", n=1)
 
 filtertit<- titlew %>% 
   filter(!split_titlew %in% stop_words$word) %>% 
@@ -385,104 +494,250 @@ filtertit<- titlew %>%
 
 words_count <- filtertit %>%
   count(split_titlew)
+words_count
 ```
-
 
 ```{r,out.width = '95%', fig.align = 'center'}
-wordcloud2(words_count, size = 1.6)
+wordcloud2(words_count, size = 1.6, 15)
 ```
 
-Whit this plot I wanted to highlights the soenators of which party signed and co sponsored more bills. at list in my data seems that the idea that democrats care more about climate changes is true. 
+# Plots
+
+I made 4 plot using `ggplot2` and one using `usmap`.
+The first plot shows the percentage of bills promoted by each party.
 
 ```{r, out.width = '95%', fig.align = 'center', plot1}
 
-plot1 <- data.frame(
-  party= c("rep", "dem"),
-  value= c(18175, 28525)
-)
+api_d <- import("data_from_api.csv")
 
-ggplot(plot1, aes(x=party,y= value)) +
-  geom_bar(stat= "identity")+
-  theme()
+party_gr <- api_d %>%
+  group_by(BILLS_id,sp_PARTY) %>%
+  count() %>%
+  ungroup()
+
+party_gr$n <- ifelse(party_gr$n== 1, "1", "1") 
+
+party_gr1 <- party_gr %>%
+  group_by(sp_PARTY,n) %>%
+  count() %>%
+  ungroup()
+
+perc <- (party_gr1$nn/length(party_gr$BILLS_id)*100)
+party_gr1$n <-c(perc)
+party_gr1$n<- round(party_gr1$n, 2)
+
+ggplot(party_gr1, aes(x="", y=nn, fill=sp_PARTY)) +
+  geom_bar(stat="identity", width=1, col="white", alpha= .9) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste0(n, "%")), position = position_stack(vjust=0.5), col = "black") +
+  labs(x = NULL, y = NULL, fill = NULL) +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_fill_manual(values=c("#1874CD", "#76EE00", "#CD2626"))+
+  ggtitle("Which party promotes more bills\nabout environment")
 
 ```
 
-I also wanted to see if democrats are the first to promote the bills.
+This second plot shows the number of bills by year I have got bills from 1998 to 2022.
 
 ```{r, out.width = '95%', fig.align = 'center', plot2}
-colnames(spo_part) <- c("empty", "party", "id")
+# date of promulgation
 
+date_gr <- api_d %>%
+  group_by(BILLS_id,PROMULGATE) %>%
+  count() %>%
+  ungroup()
 
-spo_part <- spo_part %>%
-  group_by(party)%>%
-  count()
+gr_dat<- date_gr %>% 
+  group_by(year = lubridate::floor_date(PROMULGATE, "year")) %>%
+  count()%>%
+  ungroup()
 
-ggplot(spo_part, aes(x=party,y= n)) +
-  geom_bar(stat= "identity")+
-  theme()
+ggplot(gr_dat, aes(x=year,y=n, col=as.factor(year))) +  
+  geom_point() +
+  ylab("number of bills")+
+  theme(legend.position="none") 
 
 ```
 
-With this graph I wanted to see if the trend of publishing bills in contrast to the climate changes increase over time. Unfortunately I notice here my mistake
+This map was made using `usmap`, and it shows which state sponsored more bills.
 
 ```{r, out.width = '95%', fig.align = 'center', plot3}
-colnames(i_date) <- c("empty", "date", "id")
+# state who proposed more bills about climate changes 
 
+state_gr <- api_d %>%
+  group_by(sp_STATE,BILLS_id) %>%
+  count() %>%
+  ungroup()
 
-i_date <- i_date%>%
-  group_by(date)%>%
-  count()
+state_gr$sp_STATE <- state.name[match(state_gr$sp_STATE,state.abb)]
+state_gr$sp_STATE<- tolower(state_gr$sp_STATE)
 
-ggplot(i_date, aes(x=date, y= n)) +
-  geom_line() +
-  theme_bw()
+b_stat <- state_gr %>%
+  group_by(sp_STATE) %>%
+  count() %>%
+  ungroup()
+
+#b_stat<- b_stat[-c(51),]
+colnames(b_stat) <- c("state","n")
+
+plot_usmap(data = b_stat, values = "n" ,  color = "black", ) + 
+  scale_fill_continuous(low = "white", high = "darkgreen", name = "number of bils promoted", label = scales::comma) + 
+  labs(title = "bills promoted by states") +
+  theme(legend.position = "right")
 ```
 
-To investigate for the mistake I found that I had only 35 bills not 2000 as I was thinking.
+This 4th plot shows the first 10 primary subject.
 
-```{r  focusing on the mistake,}
-bid <- list()
-i <- 1
-j <- 1
-for(i in 1:100){
-  for(j in 1:20){
-    step <- sponsor_list[[i]][[j]][[1]]
-    bid[[length(bid)+1]] <- step
-  }
-}
+```{r, out.width = '95%', fig.align = 'center', plot4}
+# P_subjects
 
-tic <- unique(bid)
+sj <- api_d %>%
+  group_by(BILLS_id, p_SUBJECT) %>%
+  count() %>%
+  ungroup()
+
+sbj <- sj%>%
+  group_by (p_SUBJECT) %>%
+  count() %>%
+  ungroup()
+
+sbj <-sbj[sbj$n > 188, ]
+
+ggplot(sbj, aes(x= reorder(p_SUBJECT, -n), y = n,fill=as.factor(p_SUBJECT))) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")+
+  theme(axis.text.x=element_text(angle= 20,hjust=1)) +
+  xlab("subject")+
+  ylab("number of bills")
+
 ```
 
-## What I learned 
+This last plot show which senator promoted more bills.
 
-- I learned so much in this course even if I frequented just the last 3 lecture, I was able to scrape data from website and tested my self in an other challenge. This time I failed because I Made that mistake. I am really disappointed but I know I give it all.
+```{r, out.width = '95%', fig.align = 'center', plot5}
+se <- api_d %>%
+  group_by(BILLS_id,SEN_id) %>%
+  count() %>%
+  ungroup()
 
-- I learned that I have fantastic colleagues And I have to say thanks to them because if I had something a bit fuzy they helped me figure it out so thanks You!
+sen <- se%>%
+  group_by (SEN_id) %>%
+  count() %>%
+  ungroup()
 
-- I have to admit that even if I am sad because I couldn't do the analysis properlly I did something that I wasn't able to do before.
+sen <-sen[sen$n > 34, ]
 
-- I always liked plot and data visualization and I am sad I just let them gray and with not labels.
+ggplot(sen, aes(x= reorder(SEN_id, -n), y = n,fill=as.factor(SEN_id))) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")+
+  theme(axis.text.x=element_text(angle= 10,hjust=1))+
+  xlab("senator id") +
+  ylab("number of bills promoted")
+  
+```
 
+# Disscussion and conclusions
+
+As expected democrats promoted more bills than republicans *(69.12 vs 30.08)*.
+Historically, environmental issues have been a center-left topic.
+The attention to the environment has increased in recent years.
+in 2018 Greta Thunberg restored centrality to climate change, in the U.S., however, she found resistance of Trump.
+Even so there was an increase of promulgation of bills, especially during the actual administrations.
+
+California is the state that has sponsored the most legislation regarding the environment.
+It is followed by New York and Texas but with less than an half of the bills that California sponsored.
+I have to admit that I was not expecting Texas to promote that much of bills about environment.
+
+The main subject of this bills in order were: Environmental protection, internals affairs, energy and health.
+
+The senators that sponsored more bills were:
+
+-   M000133 [Senator Edward J. Markey](https://www.congress.gov/member/edward-markey/M000133?q=%7B%22search%22%3A%5B%22M000133%22%2C%22M000133%22%5D%7D&s=1&r=1): he is a democrats and he represented Massachusetts from 1977 to 2013.
+    [his personal website](https://www.markey.senate.gov/)
+
+-   M000639 [Senator Robert Menendez](https://www.congress.gov/member/robert-menendez/M000639): he is a democrats and he is representing New Jersey since 2006.
+    [his personal website](https://www.menendez.senate.gov/)
+
+-   W000779 [Senator Ron Wyden](https://www.congress.gov/member/ron-wyden/W000779?q=%7B%22search%22%3A%5B%22W000779%22%2C%22W000779%22%5D%7D&s=1&r=1): he is a democrats and he is representing Oregon since 1996.
+    [his personal website](https://www.wyden.senate.gov/)
+
+-   M001176 [Senator Jeff Merkley](https://www.congress.gov/member/jeff-merkley/M001176?q=%7B%22search%22%3A%5B%22M001176%22%2C%22M001176%22%5D%7D&s=3&r=1): he is a democrats and he is representing Oregon since 2009.
+    [his personal website](https://www.merkley.senate.gov/)
+
+-   W000817 [Senator Elizabeth Warren](https://www.congress.gov/member/elizabeth-warren/W000817?q=%7B%22search%22%3A%5B%22W000817%22%2C%22W000817%22%5D%7D&s=5&r=1): she is a democrats and she is representing Massachusetts since 2013.
+    [hers personal website](https://www.warren.senate.gov/)
+
+-   C001088 [Senator Christopher A. Coons](https://www.congress.gov/member/christopher-coons/C001088?q=%7B%22search%22%3A%5B%22C001088%22%2C%22C001088%22%5D%7D&s=7&r=1): he is a democrats and he is representing Delaware since 2010.
+    [his personal website](https://www.coons.senate.gov/)
+
+-   D000563 [Senator Richard J. Durbin](https://www.congress.gov/member/richard-durbin/D000563?q=%7B%22search%22%3A%5B%22D000563%22%2C%22D000563%22%5D%7D&s=9&r=1): he is a democrats and he is representing Illinois since 1997.
+    [his personal website](https://www.durbin.senate.gov/)
+
+-   K000367 [Senator Amy Klobuchar](https://www.congress.gov/member/amy-klobuchar/K000367?q=%7B%22search%22%3A%5B%22K000367%22%2C%22K000367%22%5D%7D&s=2&r=1): she is a democrats and she is representing Minnesota since 2007.
+    [hers personal website](https://www.klobuchar.senate.gov/public/)
+
+-   C001113 [Senator Catherine Cortez Masto](https://www.congress.gov/member/catherine-cortez-masto/C001113?q=%7B%22search%22%3A%5B%22C001113%22%2C%22C001113%22%5D%7D&s=4&r=1): she is a democrats and she is representing Nevada since 2017.
+    [hers personal website](https://www.cortezmasto.senate.gov/)
+
+This senator are all democrats, once again emerges how the issue of climate change is an issue most dear to Democrats.
+Interest over time to counter this crisis has increased; we hope to find solutions soon and that politicians will not just talk but take action.
+A deeper study than this one can answer better to the research questions and go deep in the topic.
+
+*"I have no wish to change my planet. - Pablo Neruda"*
+
+## What I learned
+
+-   I learned so much in this course even if I frequented just the last 3 lecture, I was able to scrape data from website and tested my self in an other challenge.
+    This time I failed because I Made that mistake.
+    I am really disappointed but I know I give it all.
+
+-   I learned that I have fantastic colleagues And I have to say thanks to them because if I had something a bit fuzy they helped me figure it out so thanks You!
 
 ## Bibliography
 
-- Ann Conyers, Zella, Richard Grant, and Shouraseni Sen Roy. 2019. “Sea Level Rise in Miami Beach: Vulnerability and Real Estate Exposure.” The Professional Geographer 71 (2): 278–91. [](https://doi.org/10.1080/00330124.2018.1531037).
+-   Ann Conyers, Zella, Richard Grant, and Shouraseni Sen Roy.
+    2019.
+    "Sea Level Rise in Miami Beach: Vulnerability and Real Estate Exposure." The Professional Geographer 71 (2): 278--91.
+    .
 
-- Brainard, Jeffrey, and Richard Monastersky. 2007. “Congress Debates Climate Change.” The Chronicle of Higher Education 53 (25). [](https://go-gale-com.pros1.lib.unimi.it/ps/i.do?p=AONE&sw=w&issn=00095982&v=2.1&it=r&id=GALE%7CA159933410&sid=googleScholar&linkaccess=abs).
+-   Brainard, Jeffrey, and Richard Monastersky.
+    2007.
+    "Congress Debates Climate Change." The Chronicle of Higher Education 53 (25).
+    .
 
-- “Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session   Note.” 2016. Economy-Wide Implications of President Obama’s Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session, I–85.
+-   "Economy-Wide Implications of President Obama's Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session Note." 2016.
+    Economy-Wide Implications of President Obama's Air Agenda: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fourteenth Congress, First Session, I--85.
 
-- Gornitz, Vivien, Stephen Couch, and Ellen K Hartig. 2001. “Impacts of Sea Level Rise in the New York City Metropolitan Area.” Global and Planetary Change, Global and Regional Sea-level Changes and the Hydrological Cycle, 32 (1): 61–88. https://doi.org/10.1016/S0921-8181(01)00150-3. 2002. “Impacts of Sea Level Rise in the New York City Metropolitan Area,” 28.
+-   Gornitz, Vivien, Stephen Couch, and Ellen K Hartig.
+    2001.
+    "Impacts of Sea Level Rise in the New York City Metropolitan Area." Global and Planetary Change, Global and Regional Sea-level Changes and the Hydrological Cycle, 32 (1): 61--88.
+    [https://doi.org/10.1016/S0921-8181(01)00150-3](https://doi.org/10.1016/S0921-8181(01)00150-3){.uri}.
+    2002.
+    "Impacts of Sea Level Rise in the New York City Metropolitan Area," 28.
 
-- Klüver, Heike, and Iñaki Sagarzazu. 2016a. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295. 2016b. “Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention.” West European Politics 39 (2): 380–98. https://doi.org/10.1080/01402382.2015.1101295.
+-   Klüver, Heike, and Iñaki Sagarzazu.
+    2016a.
+    "Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention." West European Politics 39 (2): 380--98.
+    <https://doi.org/10.1080/01402382.2015.1101295>.
+    2016b.
+    "Setting the Agenda or Responding to Voters? Political Parties, Voters and Issue Attention." West European Politics 39 (2): 380--98.
+    <https://doi.org/10.1080/01402382.2015.1101295>.
 
-- “Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998   Note.” 1998. Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998, i–67.
+-   "Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R. 2863, September 29, 1998 Note." 1998.
+    Migratory Bird Treaty Reform Act of 1998: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Fifth Congress, Second Session on H.R.
+    2863, September 29, 1998, i--67.
 
-- Park, Hyung Sam, Xinsheng Liu, and Arnold Vedlitz. n.d. “Framing Climate Policy Debates: Science, Network, and U.S. Congress, 1976-2007,” 23.
+-   Park, Hyung Sam, Xinsheng Liu, and Arnold Vedlitz.
+    n.d.
+    "Framing Climate Policy Debates: Science, Network, and U.S. Congress, 1976-2007," 23.
 
-- Tollefson, Jeff. 2015. “Pope Francis Pushes US Congress on Poverty and Climate.” Nature (London). https://doi.org/10.1038/nature.2015.18427.
+-   Tollefson, Jeff.
+    2015.
+    "Pope Francis Pushes US Congress on Poverty and Climate." Nature (London).
+    <https://doi.org/10.1038/nature.2015.18427>.
 
-- “Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session   Note.” 2011. Vice President Al Gore’s Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session, I–70.
-
-
+-   "Vice President Al Gore's Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session Note." 2011.
+    Vice President Al Gore's Perspective on Global Warming: Hearing before the Committee on Environment and Public Works, United States Senate, One Hundred Tenth Congress, First Session, I--70.
